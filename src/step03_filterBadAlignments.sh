@@ -57,18 +57,17 @@ done
 
 # Main program ##############################################
 
+echo "Processing step3_filterBadAlignments... " 
 echo "Job started at "$(date) 
 time1=$(date +%s)
 
 #source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 
-BAM_FILT1="${BAM_F%.*}.filter1.bam"
+BAM_FILT1="${SAMPLE_NAME}.filter1.bam"
 MPP="${BAM_FILT1%.*}.mapped_proper_pair.txt"
-BAM_FILT2="${BAM_F%.*}.filter2.bam"
+BAM_FILT2="${SAMPLE_NAME}.filter2.bam"
 HiMM="${BAM_FILT2%.*}.high_mismatch.txt"
-BAM_FILT3="${BAM_F%.*}.filter3.bam"
-
-echo "Processing step3_filterBadAlignments... " 
+BAM_FILT3="${SAMPLE_NAME}.filter3.bam"
 
 ## filter1 - remove unmapped and secondary reads
 samtools view -b \
@@ -83,7 +82,7 @@ samtools view \
     | awk '{print $1}' \
     > ${OUT_DIR}/${MPP}
 
-java -jar /cluster/tools/software/picard/2.10.9/picard.jar FilterSamReads \
+picard FilterSamReads \
     I=${OUT_DIR}/${BAM_FILT1} \
     O=${OUT_DIR}/${BAM_FILT2} \
     READ_LIST_FILE=${OUT_DIR}/${MPP} \
@@ -97,7 +96,7 @@ samtools view \
     | awk '{print $1}' \
     > ${OUT_DIR}/${HiMM} 
 
-java -jar /cluster/tools/software/picard/2.10.9/picard.jar FilterSamReads \
+picard FilterSamReads \
     I=${OUT_DIR}/${BAM_FILT2} \
     O=${OUT_DIR}/${BAM_FILT3} \
     READ_LIST_FILe=${OUT_DIR}/${HiMM} \
@@ -106,9 +105,9 @@ java -jar /cluster/tools/software/picard/2.10.9/picard.jar FilterSamReads \
 
 echo "Finished processing filter out bad alignments."
 
-
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

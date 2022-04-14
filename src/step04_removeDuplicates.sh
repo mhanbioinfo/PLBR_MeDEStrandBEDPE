@@ -57,6 +57,7 @@ done
 
 # Main program ##############################################
 
+echo "Processing step4_removeDuplicates..." 
 echo "Job started at "$(date) 
 time1=$(date +%s)
 
@@ -64,20 +65,18 @@ time1=$(date +%s)
 
 UMI_DEDUP="${BAM_FILT3%.*}.dedup.bam"
 
-echo "Processing step4_removeDuplicates..." 
-
 samtools index ${INPUT_DIR}/${BAM_FILT3}
 
 umi_tools dedup --paired \
     -I ${INPUT_DIR}/${BAM_FILT3} \
     -S ${OUT_DIR}/${UMI_DEDUP} \
-    --output-stats=${OUT_DIR}/deduplicated 
+    --output-stats=${OUT_DIR}/${SAMPLE_NAME}_deduplicated 
 
 echo "Finished processing removing UMI based duplicates."
-
 
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

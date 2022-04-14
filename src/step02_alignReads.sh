@@ -61,15 +61,14 @@ done
 
 # Main program ##############################################
 
+echo "Processing step2_alignReads..." 
 echo "Job started at "$(date) 
 time1=$(date +%s)
 
 #source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 
-BWA_MAPPED_SAM="${SAMPLE_NAME}.bwa.sam"
-BAM_F="${SAMPLE_NAME}.bwa.bam"
-
-echo "Processing step2_alignReads..." 
+BWA_MAPPED_SAM="${SAMPLE_NAME}.sam"
+BAM_F="${SAMPLE_NAME}.bam"
 
 bwa mem -t 8 \
     ${REF_BWA} \
@@ -88,5 +87,6 @@ echo "Finished processing bwa alignReads."
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

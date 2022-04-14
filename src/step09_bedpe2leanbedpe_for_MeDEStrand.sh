@@ -72,6 +72,7 @@ done
 
 [[ "$no_args" == "true" ]] && { usage; exit 1; }
 
+echo "Processing step09_bedpe2leanbedpe_for_MeDEStrand..."
 echo "input directory:           $INPUT_DIR"
 echo "full .bedpe.gz filename:   $FULL_BEDPE_FNAME"
 echo "chromosome selection file: $CHR_SELECT"
@@ -146,10 +147,10 @@ if [ "$KEEP_TMP" != true ]; then
     rm -r ${OUT_DIR}/tmp/bedpe2leanbedpe/
 fi
 
-echo ""
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF
 

@@ -62,6 +62,7 @@ done
 
 # Main program ##############################################
 
+echo "Processing umi_tools UMI extraction... " 
 echo "Job started at "$(date) 
 time1=$(date +%s)
 
@@ -69,8 +70,6 @@ time1=$(date +%s)
 
 R1_EXTRACTED_F="${SAMPLE_NAME}.R1.umiExtd.fq.gz"
 R2_EXTRACTED_F="${SAMPLE_NAME}.R2.umiExtd.fq.gz"
-
-echo "Processing umi_tools UMI extraction... " 
 
 umi_tools extract \
     --extract-method=string \
@@ -89,5 +88,6 @@ echo "Finished processing umi_tools UMI extraction."
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

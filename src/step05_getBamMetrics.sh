@@ -59,22 +59,21 @@ done
 
 # Main program ##############################################
 
+echo "Processing step3_filterBadAlignments..."
 echo "Job started at "$(date) 
 time1=$(date +%s)
 
-#source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
+source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 
 ALIGNER="BWA"
 
-echo "Processing step3_filterBadAlignments..."
-
-java -jar $picard_dir/picard.jar CollectMultipleMetrics \
+picard CollectMultipleMetrics \
     R=${REF_FASTA_F} \
     I=${INPUT_DIR}/${INPUT_BAM} \
     O="${OUT_DIR}/${SAMPLE_NAME}.${ALIGNER}" \
     VALIDATION_STRINGENCY=SILENT
 
-java -jar $picard_dir/picard.jar CollectGcBiasMetrics \
+picard CollectGcBiasMetrics \
     R=${REF_FASTA_F} \
     I=${INPUT_DIR}/${INPUT_BAM} \
     O="${OUT_DIR}/${SAMPLE_NAME}.${ALIGNER}.gc_bias_metrics.txt" \
@@ -83,9 +82,9 @@ java -jar $picard_dir/picard.jar CollectGcBiasMetrics \
 
 echo "Finished processing picard CollectMultipleMetrics and CollectGcBiasMetrics." 
 
-
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

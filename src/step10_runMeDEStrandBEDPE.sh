@@ -61,12 +61,9 @@ done
 
 # Main program ##############################################
 
+echo "Processing step10_runMeDEStrandBEDPE... " 
 echo "Job started at "$(date) 
 time1=$(date +%s)
-
-#source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
-
-echo "Processing step10_runMeDEStrandBEDPE... " 
 
 source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 
@@ -77,9 +74,9 @@ Rscript ${RSCRIPTS_DIR}/MeDEStrandBEDPE.r \
 
 echo "Finished processing running MeDEStrand."
 
-
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

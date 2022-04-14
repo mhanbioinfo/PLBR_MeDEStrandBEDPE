@@ -13,7 +13,8 @@
 #SBATCH -e ./%j-%x.err
 
 ## usage
-## sbatch/bash run_MeDEStrandBEDPE.sh config_MeDEStrandBEDPE.yml
+## bash run_MeDEStrandBEDPE.sh path/to/config_MeDEStrandBEDPE.yml
+## ( no need to sbatch here even if running on cluster )
 
 if [ $# != 1 ]; then
     echo "Please specify a config.yml file."
@@ -61,8 +62,9 @@ done
 
 SRC_DIR="$(pwd)/src"
 
-if [ $INPUT_FILE_TYPE_FASTQ = "Yes" ]; then
-    echo "Input filetype is FASTQ."
+if [ $INPUT_FILE_TYPE_FASTQ_GZ = "Yes" ]; then
+    echo ""
+    echo "Input filetype is .fastq.gz"
     bash $SRC_DIR/run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh \
         -s ${SAMPLESHEET_PATH} \
         -p ${PROJ_DIR} \
@@ -71,37 +73,40 @@ if [ $INPUT_FILE_TYPE_FASTQ = "Yes" ]; then
         -r ${REF_BWA} \
         -f ${REF_FASTA_F} \
         -w ${MeDEStrandBEDPE_WINDOW_SIZE} \
-        -c ${BEDPE2LEANBEDPE_CHR_SELECT_F}
-elif [$INPUT_FILE_TYPE_BAM = "Yes" ]; then
-   echo "Input filetype is BAM."
-elif [$INPUT_FILE_TYPE_BEDPE = "Yes" ]; then
-   echo "Input filetype is BAM."
+        -l ${SLURM_OR_LOCAL} \
+        -k ${BAM2BEDPE_NUM_OF_CHUNKS} \
+        -c ${BEDPE2LEANBEDPE_CHR_SELECT_F} \
+        -x ${SRC_DIR} \
+        -t ${KEEP_TMP}
+
+elif [ $INPUT_FILE_TYPE_BAM = "Yes" ]; then
+    echo ""
+    echo "Input filetype is BAM"
+    bash $SRC_DIR/run_MeDEStrandBEDPE_fromBAMs_makeBatchScripts.sh \
+        -s ${SAMPLESHEET_PATH} \
+        -p ${PROJ_DIR} \
+        -f ${REF_FASTA_F} \
+        -w ${MeDEStrandBEDPE_WINDOW_SIZE} \
+        -l ${SLURM_OR_LOCAL} \
+        -k ${BAM2BEDPE_NUM_OF_CHUNKS} \
+        -c ${BEDPE2LEANBEDPE_CHR_SELECT_F} \
+        -x ${SRC_DIR} \
+        -t ${KEEP_TMP}
+
+elif [ $INPUT_FILE_TYPE_BEDPE_GZ = "Yes" ]; then
+    echo ""
+    echo "Input filetype is .bedpe.gz"
+    bash $SRC_DIR/run_MeDEStrandBEDPE_fromBEDPEs_makeBatchScripts.sh \
+        -s ${SAMPLESHEET_PATH} \
+        -p ${PROJ_DIR} \
+        -w ${MeDEStrandBEDPE_WINDOW_SIZE} \
+        -l ${SLURM_OR_LOCAL} \
+        -c ${BEDPE2LEANBEDPE_CHR_SELECT_F} \
+        -x ${SRC_DIR} \
+        -t ${KEEP_TMP}
 else
-   echo "Please specify input filetype."
+    echo "Please specify input filetype."
 fi
-
-
-
-
-#echo $PROJ_DIR
-#echo $SAMPLESHEET_PATH
-#echo $INPUT_FILE_TYPE_FASTQ
-#echo $INPUT_FILE_TYPE_BAM
-#echo $INPUT_FILE_TYPE_BEDPE
-#echo $REMOVE_TMP
-#
-## references
-#echo $REF_BWA
-#echo $REF_FASTA_F
-#
-## tool specific parameters
-#echo $MeDEStrandBEDPE_UMI1_PATTERN
-#echo $MeDEStrandBEDPE_UMI2_PATTERN
-#echo $MeDEStrandBEDPE_WINDOW_SIZE
-#
-#echo $BEDPE2LEANBEDPE_CHR_SELECT_F
-#echo $BEDPE2LEANBEDPE_REMOVE_TMP
-
 
 
 

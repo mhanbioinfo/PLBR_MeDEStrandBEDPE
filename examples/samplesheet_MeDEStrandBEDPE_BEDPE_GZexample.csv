@@ -1,0 +1,3 @@
+SAMPLE_NAME,BEDPE_GZ_PATH
+sample001,/absolute/path/to/data_bedpe/sample001_coordSortd.bedpe.gz
+sample002,/absolute/path/to/data_bedpe/sample002_coordSortd.bedpe.gz

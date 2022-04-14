@@ -1,0 +1,5 @@
+SAMPLE_NAME,FASTQ_GZ_PATH
+sample001,/absolute/path/to/data_fastq/sample001_ABC_R1.fastq.gz
+sample001,/absolute/path/to/data_fastq/sample001_ABC_R2.fastq.gz
+sample002,/absolute/path/to/data_fastq/sample001_ABC_R1.fastq.gz
+sample002,/absolute/path/to/data_fastq/sample001_ABC_R2.fastq.gz

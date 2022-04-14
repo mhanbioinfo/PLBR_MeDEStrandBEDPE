@@ -1,0 +1,41 @@
+## configuration for running MeDEStrandBEDPE
+
+# common parameters
+PROJ_DIR: "/absolute/path/to/project_directory"
+SAMPLESHEET_PATH: "/absolute/path/to/samplesheet_MeDEStrandBEDPE_test1.csv"
+INPUT_FILE_TYPE:
+  FASTQ_GZ: "Yes"
+  BAM: "No"
+  BEDPE_GZ: "No"
+SLURM_OR_LOCAL: "local"
+KEEP_TMP: "true"
+
+# references
+REF_BWA: "/absolute/path/to/BWA_index/hg38_F19K16_F24B22"
+REF_FASTA_F: "/absolute/path/to/hg38_F19K16_F24B22.fa"
+
+# tool specific parameters
+BAM2BEDPE:
+  NUM_OF_CHUNKS: 10
+BEDPE2LEANBEDPE:
+  CHR_SELECT_F: "/absolute/path/to/chr_select.txt"
+MeDEStrandBEDPE:
+  UMI1_PATTERN: "NNNNN"
+  UMI2_PATTERN: "NNNNN"
+  WINDOW_SIZE: 200
+
+# tool versions
+bwa: v0.7.17
+samtools: v1.10
+r-base: v3.6
+python: v3.7.12
+umi_tools: v1.0.0
+pysam: v0.16.0.1
+Rsamtools: v2.2.3
+picard: v2.27.1
+BSgenome.Hsapiens.UCSC.hg38: v1.4.1
+MEDIPS: v1.38.0
+MeDEStrandBEDPE: v1
+
+
+## EOF

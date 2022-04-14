@@ -15,7 +15,7 @@
 # getopts ###################################################
 usage(){
     echo 
-    echo "Usage: bash/sbatch step8_bam2bedpe.sh -s [slurm|local] -c num_of_chunks -b bam_input_path -o output_dir -t"
+    echo "Usage: bash/sbatch step8_bam2bedpe.sh -s [slurm|local] -c num_of_chunks -b bam_input_path -o output_dir -x SRC_DIR -t"
     echo 
 }
 no_args="true"
@@ -28,19 +28,20 @@ Help()
     echo 
     echo "Processes bam to bedpe in chunks, preserving FLAG, TLEN and CIGAR fields."
     echo
-    echo "Usage: bash/sbatch step8_bam2bedpe.sh -s [slurm|local] -c num_of_chunks -b bam_input_path -o output_dir -t"
+    echo "Usage: bash/sbatch step8_bam2bedpe.sh -s [slurm|local] -c num_of_chunks -b bam_input_path -o output_dir -x SRC_DIR -t"
     echo "options:"
     echo "-h   [HELP]      print help"
     echo "-s   [REQUIRED]  type either 'slurm' or 'local', local is with nohup"
     echo "-c   [REQUIRED]  number of chunks to process in parallel"
     echo "-b   [REQUIRED]  path to bam input (full path)"
     echo "-o   [REQUIRED]  output directory (full path)"
+    echo "-x   [REQUIRED]  src directory with pipeline scripts (full path)"
     echo "-t   [OPTIONAL]  keep tmp_dir"
     echo
 }
 
 ## Get the options
-while getopts ":hs:c:b:o:t" option; do
+while getopts ":hs:c:b:o:x:t" option; do
     case "${option}" in
         h) Help
            exit;;
@@ -48,6 +49,7 @@ while getopts ":hs:c:b:o:t" option; do
         c) NUM_OF_CHUNKS=${OPTARG};;
         b) INPUT_BAM_PATH=${OPTARG};;
         o) OUT_DIR=${OPTARG};;
+        x) SRC_DIR=${OPTARG};;
         t) KEEP_TMP=true;;
        \?) echo "Error: Invalid option"
            exit;;
@@ -57,6 +59,7 @@ done
 
 [[ "$no_args" == "true" ]] && { usage; exit 1; }
 
+echo "Processing step8_bam2bedpe..."
 echo "number of chunks: $NUM_OF_CHUNKS"
 echo "input bam path:   $INPUT_BAM_PATH"
 echo "output path:      $OUT_DIR"
@@ -71,21 +74,16 @@ time1=$(date +%s)
 #echo "${NUM_OF_CORES} cores available, processing ${NUM_OF_CORES} chunks in parallel."
 #NUM_OF_CHUNKS=$NUM_OF_CORES
 
-PY_SCRIPT_DIR=$(pwd)
+PY_SCRIPT_DIR=${SRC_DIR}
 PY_SCRIPT_PATH="${PY_SCRIPT_DIR}/bam2bedpe_pysam_v5_wCIGAR.py"
 INPUT_DIR="${INPUT_BAM_PATH%/*}"
 INPUT_BAM="${INPUT_BAM_PATH##*/}"
 
-TMP_DIR="${OUT_DIR}/tmp_dir"
+TMP_DIR="${OUT_DIR}/tmp_dir/${INPUT_BAM%.*}"
 mkdir -p $TMP_DIR
 
 OUT_FRAG_NAMES="${INPUT_BAM%.*}.fragNames"
 OUT_MERGED_SORTD_BEDPE="${INPUT_BAM%.*}_coordSortd.bedpe"
-
-#source /cluster/home/t110409uhn/bin/miniconda3/bin/activate py39
-#module load samtools/1.14
-#module load java/8
-#module load picard/2.10.9
 
 ## -------------------------------------- ##
 ## get fragNames
@@ -143,15 +141,12 @@ for CHUNK in ${TMP_DIR}/${OUT_FRAG_NAMES}.CHUNK*; do
 	#SBATCH -o ./%j-%x.out
 	#SBATCH -e ./%j-%x.err
 	
-	source /cluster/home/t110409uhn/bin/miniconda3/bin/activate py39
-	module load java/8
-	module load picard/2.10.9
+	source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 
 	echo "Job started at "\$(date) 
 	time1=\$(date +%s)
 	
-	java -jar $picard_dir/picard.jar \
-	    FilterSamReads \
+	picard FilterSamReads \
 	    I=${INPUT_DIR}/${INPUT_BAM} \
 	    O=${TMP_DIR}/"${INPUT_BAM%.*}_${CHUNK##*.}.bam" \
 	    READ_LIST_FILE=${CHUNK} \
@@ -209,5 +204,6 @@ fi
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF

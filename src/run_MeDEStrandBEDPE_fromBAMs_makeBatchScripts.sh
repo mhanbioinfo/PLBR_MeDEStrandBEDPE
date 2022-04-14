@@ -5,7 +5,7 @@
 #SBATCH -t 5-00:00:00
 #SBATCH -D ./
 #SBATCH --mem=16G
-#SBATCH -J run_MeDEStrandBEDPE_fromFASTQs
+#SBATCH -J run_MeDEStrandBEDPE_fromBAMs
 #SBATCH -p himem
 #SBATCH -c 1
 #SBATCH -N 1
@@ -17,7 +17,7 @@
 
 usage(){
     echo 
-    echo "Usage: bash run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -u UMI1_PATTERN -v UMI2_PATTERN -r REF_BWA -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP" 
+    echo "Usage: bash run_MeDEStrandBEDPE_fromBAMs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP" 
     echo 
 }
 no_args="true"
@@ -27,16 +27,13 @@ Help()
 {
     # Display Help
     echo 
-    echo "Write out batch script for each sample and run MeDEStrandBEDPE with FASTQs as input."
+    echo "Write out batch script for each sample and run MeDEStrandBEDPE with BAMs as input."
     echo
-    echo "Usage: bash run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -u UMI1_PATTERN -v UMI2_PATTERN -r REF_BWA -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP"
+    echo "Usage: bash run_MeDEStrandBEDPE_fromBAMs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP"
     echo "options:"
     echo "-h   [HELP]      print help"
     echo "-s   [REQUIRED]  samplesheet.csv (full path)"
     echo "-p   [REQUIRED]  project directory for writing outputs to (full path)"
-    echo "-u   [REQUIRED]  UMI1 pattern, 3 UMI + 2 linker (e.g. NNNNN)"
-    echo "-v   [REQUIRED]  UMI2 pattern, 3 UMI + 2 linker (e.g. NNNNN)"
-    echo "-r   [REQUIRED]  hg38 and F19K16_F24B22 BWA index reference (full path)" 
     echo "-f   [REQUIRED]  hg38 and F19K16_F24B22 concatenated fasta (full path)"
     echo "-w   [REQUIRED]  window size (e.g. 200)"
     echo "-l   [REQUIRED]  run pipeline on HPC or local (slurm or local)"
@@ -48,15 +45,12 @@ Help()
 }
 
 ## Get the options
-while getopts ":hs:p:u:v:r:f:w:l:k:c:x:t:" option; do
+while getopts ":hs:p:f:w:l:k:c:x:t:" option; do
     case "${option}" in
         h) Help
            exit;;
         s) SAMPLESHEET_PATH=${OPTARG};;
         p) PROJ_DIR=${OPTARG};;
-        u) UMI1_PATTERN=${OPTARG};;
-        v) UMI2_PATTERN=${OPTARG};;
-        r) REF_BWA=${OPTARG};;
         f) REF_FASTA_F=${OPTARG};;
         w) WINDOW_SIZE=${OPTARG};;
         l) SLURM_OR_LOCAL=${OPTARG};;
@@ -102,7 +96,6 @@ echo "Creating slurm log directory."
 SLURM_LOG_DIR="${PROJ_DIR}/slurm_log"
 mkdir -p ${SLURM_LOG_DIR}
 
-
 ## write out batch script for each sample ###################
 
 echo ""
@@ -110,26 +103,22 @@ OLDIFS=$IFS
 IFS=','
 [ ! -f $SAMPLESHEET_PATH ] && { echo "$SAMPLESHEET_PATH file not found"; exit 99; }
 sed 1d $SAMPLESHEET_PATH | \
-while read -r SAMPLE_NAME_R1 PATH_R1; do
-    echo "Processing sample: ${SAMPLE_NAME_R1} ..."
+while read -r SAMPLE_NAME BAM_PATH; do
+    echo "Processing sample: ${SAMPLE_NAME} ..."
     
-    ## read 2 lines at once for R1 and R2
-    read -r SAMPLE_NAME_R2 PATH_R2
+    ## get .bam filename
+    BAM_FNAME=${BAM_PATH##*/}
     
-    ## get fastq name only
-    R1_FASTQ_FNAME=${PATH_R1##*/}
-    R2_FASTQ_FNAME=${PATH_R2##*/}
+    ## get .bam directory
+    BAM_DIR=${BAM_PATH%/*}
     
-    ## get fastq directory
-    R1_FASTQ_DIR=${PATH_R1%/*}
-    
-    echo "Writing out '${SAMPLE_NAME_R1}_sbatch_script.sh'"
+    echo "Writing out '${SAMPLE_NAME}_sbatch_script.sh'"
     echo ""
     ## write out '{samplename}_sbatch_script.sh'
-    cat <<- EOF > "${SLURM_SCRIPTS_DIR}/${SAMPLE_NAME_R1}_sbatch_script.sh"
+    cat <<- EOF > "${SLURM_SCRIPTS_DIR}/${SAMPLE_NAME}_sbatch_script.sh"
 	#!/bin/bash
 	#SBATCH -t 3-00:00:00
-	#SBATCH -J cfMeDIP_MeDEStrandBEDPE_${SAMPLE_NAME_R1}
+	#SBATCH -J cfMeDIP_MeDEStrandBEDPE_${SAMPLE_NAME}
 	#SBATCH -D ${SLURM_LOG_DIR}	
 	#SBATCH --mail-type=ALL
 	#SBATCH --mail-user=ming.han@uhn.ca
@@ -142,12 +131,12 @@ while read -r SAMPLE_NAME_R1 PATH_R1; do
 	echo "Job started at "\$(date) 
 	time1=\$(date +%s)
 	
-	echo "Processing MeDEStrandBEDPE for ${SAMPLE_NAME_R1}"
+	echo "Processing MeDEStrandBEDPE for ${SAMPLE_NAME}"
 	
 	source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 	
-	SAMPLE_NAME="${SAMPLE_NAME_R1//-/_}"
-	INPUT_DIR="${R1_FASTQ_DIR}"
+	SAMPLE_NAME="${SAMPLE_NAME//-/_}"
+	INPUT_DIR="${BAM_DIR}"
 	OUT_DIR="${PROJ_DIR}"
 	BAM_OUT_DIR="${BAM_OUT_DIR}"
 	BEDPE_OUT_DIR="${BEDPE_OUT_DIR}"
@@ -161,32 +150,19 @@ while read -r SAMPLE_NAME_R1 PATH_R1; do
 	SLURM_OR_LOCAL="${SLURM_OR_LOCAL}"
 	KEEP_TMP_SAMPLE_DIR="${KEEP_TMP}"
 	
-	FASTQ_R1_F="${R1_FASTQ_FNAME}"
-	FASTQ_R2_F="${R2_FASTQ_FNAME}"
-	UMI1_PATTERN="${UMI1_PATTERN}"
-	UMI2_PATTERN="${UMI2_PATTERN}"
-	REF_BWA="${REF_BWA}"
 	REF_FASTA_F="${REF_FASTA_F}"
 	CHR_SELECT_F="${CHR_SELECT_F}"
 	WINDOW_SIZE=${WINDOW_SIZE}
 	NUM_OF_CHUNKS=${NUM_OF_CHUNKS}
 	
-	R1_EXTRACTED_F="\${SAMPLE_NAME}.R1.umiExtd.fq.gz"
-	R2_EXTRACTED_F="\${SAMPLE_NAME}.R2.umiExtd.fq.gz"
-	BAM_F="\${SAMPLE_NAME}.bam"
-	BAM_FILT3="\${BAM_F%.*}.filter3.bam"
+	BAM_F="${BAM_FNAME}"
+	BAM_FILT3="\${SAMPLE_NAME}.filter3.bam"
 	UMI_DEDUP="\${BAM_FILT3%.*}.dedup.bam"
 	BEDPE_GZ_FNAME="\${UMI_DEDUP%.*}_coordSortd.bedpe.gz"
 	LEAN_BEDPE_GZ="\${BEDPE_GZ_FNAME%.bedpe.gz}_4mede_chrSelect.bedpe"
 	
-	## UMI-tools extract
-	bash \${SRC_DIR}/step01_umi_tools_extract.sh -s \${SAMPLE_NAME} -i \${INPUT_DIR} -f \${FASTQ_R1_F} -g \${FASTQ_R2_F} -u \${UMI1_PATTERN} -v \${UMI2_PATTERN} -o \${TMP_SAMPLE_DIR}
-	
-	## bwa alignReads
-	bash \${SRC_DIR}/step02_alignReads.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -f \${R1_EXTRACTED_F} -g \${R2_EXTRACTED_F} -r \${REF_BWA} -o \${TMP_SAMPLE_DIR}
-	
 	## filter out bad alignments
-	bash \${SRC_DIR}/step03_filterBadAlignments.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -b \${BAM_F} -o \${TMP_SAMPLE_DIR}
+	bash \${SRC_DIR}/step03_filterBadAlignments.sh -s \${SAMPLE_NAME} -i \${INPUT_DIR} -b \${BAM_F} -o \${TMP_SAMPLE_DIR}
 	
 	## Remove duplicates based on UMI extracted with UMI-tools
 	bash \${SRC_DIR}/step04_removeDuplicates.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -b \${BAM_FILT3} -o \${BAM_OUT_DIR}
@@ -230,12 +206,19 @@ echo "Finished writing all scripts."
 ## sbatch batch scripts for each sample ###################
 
 echo ""
-echo "sbatch all sbatch_script.sh"
-for sbatch_script in ${SLURM_SCRIPTS_DIR}/*; do
-    echo "${sbatch_script##*/}"
-    sbatch ${sbatch_script}
-done
-
+if [ "$SLURM_OR_LOCAL" = "slurm" ]; then
+    echo "sbatch all sbatch_script.sh"
+    for sbatch_script in ${SLURM_SCRIPTS_DIR}/*; do
+        echo "${sbatch_script##*/}"
+        sbatch ${sbatch_script}
+    done
+elif [ "$SLURM_OR_LOCAL" = "local" ]; then
+    echo "bash all sbatch_script.sh"
+    for sbatch_script in ${SLURM_SCRIPTS_DIR}/*; do
+        echo "${sbatch_script##*/}"
+        bash ${sbatch_script}
+    done
+fi
 
 echo "Finished processing pipeline."
 

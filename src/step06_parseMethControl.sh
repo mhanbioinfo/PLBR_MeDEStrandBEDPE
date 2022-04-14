@@ -57,6 +57,7 @@ done
 
 # Main program ##############################################
 
+echo "Processing step6_parseMethControl..." 
 echo "Job started at "$(date) 
 time1=$(date +%s)
 
@@ -64,32 +65,28 @@ time1=$(date +%s)
 
 SEQMETH="F19K16"
 SEQUMETH="F24B22"
-QC_METRICS_DIR="${OUT_DIR}/QC_metrics"
-mkdir -p ${QC_METRICS_DIR}
-
-echo "Processing step6_parseMethControl..." 
 
 samtools view ${INPUT_DIR}/${INPUT_BAM} | \
     cut -f 3 | sort | uniq -c | sort -nr | \
     sed -e 's/^ *//;s/ /\t/' | \
     awk 'OFS="\t" {print $2,$1}' | \
     sort -n -k1,1 \
-    > ${QC_METRICS_DIR}/meth_ctrl.counts
+    > ${OUT_DIR}/meth_ctrl.counts
 
 total=$(samtools view ${INPUT_DIR}/${INPUT_BAM} | wc -l)
-unmap=$(cat ${QC_METRICS_DIR}/meth_ctrl.counts | grep '^\*' | cut -f2); if [[ -z $unmap ]]; then unmap="0"; fi
-methyl=$(cat ${QC_METRICS_DIR}/meth_ctrl.counts | grep ${SEQMETH} | cut -f2); if [[ -z $methyl ]]; then methyl="0"; fi
-unmeth=$(cat ${QC_METRICS_DIR}/meth_ctrl.counts | grep ${SEQUMETH} | cut -f2); if [[ -z $unmeth ]]; then unmeth="0"; fi
+unmap=$(cat ${OUT_DIR}/meth_ctrl.counts | grep '^\*' | cut -f2); if [[ -z $unmap ]]; then unmap="0"; fi
+methyl=$(cat ${OUT_DIR}/meth_ctrl.counts | grep ${SEQMETH} | cut -f2); if [[ -z $methyl ]]; then methyl="0"; fi
+unmeth=$(cat ${OUT_DIR}/meth_ctrl.counts | grep ${SEQUMETH} | cut -f2); if [[ -z $unmeth ]]; then unmeth="0"; fi
 pct_meth_ctrl=$(echo "scale=3; ($methyl + $unmeth)/$total * 100" | bc -l); if [[ -z $pct_meth_ctrl ]]; then pct_meth_ctrl="0"; fi
 bet_meth_ctrl=$(echo "scale=3; $methyl/($methyl + $unmeth)" | bc -l); if [[ -z $bet_meth_ctrl ]]; then bet_meth_ctrl="0"; fi
-echo -e "total\tunmap\tmethyl\tunmeth\tPCT_METH_CTRL\tMETH_CTRL_BETA" > ${QC_METRICS_DIR}/meth_ctrl_summary.txt
-echo -e "$total\t$unmap\t$methyl\t$unmeth\t$pct_meth_ctrl\t$bet_meth_ctrl" >> ${QC_METRICS_DIR}/meth_ctrl_summary.txt
+echo -e "total\tunmap\tmethyl\tunmeth\tPCT_METH_CTRL\tMETH_CTRL_BETA" > ${OUT_DIR}/meth_ctrl_summary.txt
+echo -e "$total\t$unmap\t$methyl\t$unmeth\t$pct_meth_ctrl\t$bet_meth_ctrl" >> ${OUT_DIR}/meth_ctrl_summary.txt
 
 echo "Finished processing parsing methylation controls."
-
 
 time2=$(date +%s)
 echo "Job ended at "$(date) 
 echo "Job took $(((time2-time1)/3600)) hours $((((time2-time1)%3600)/60)) minutes $(((time2-time1)%60)) seconds"
+echo ""
 
 ## EOF
