@@ -5,7 +5,7 @@
 - Run MeDEStrand with bedpe input as part of PLBR database workflow.
 - Pipeline is an extension of OICR cfMeDIPseq analysis pipeline (https://github.com/oicr-gsi/wf_cfmedip)
 - Pipeline can take FASTQs, BAM or BEDPE as input, 
-  - runs modified version of MeDEStrand (https://github.com/mhanbioinfo/MeDEStrand) (identical output as original MeDEStrand, except is able to take in .bedpe.gz as input instead of .bam)
+  - runs modified version of MeDEStrand (https://github.com/mhanbioinfo/MeDEStrand) (identical output as original MeDEStrand, except is able to take in .bedpe.gz as input, in addition to .bam input)
   - and outputs methylation profile.
 - Pipeline is designed to run on SLURM, but can run locally as well
 
