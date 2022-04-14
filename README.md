@@ -11,7 +11,7 @@
 
 ## Workflow overview
 
-[MeDEStrandBEDPE.pdf](https://github.com/mhanbioinfo/PLBR_MeDEStrandBEDPE/files/8491085/MeDEStrandBEDPE.pdf)
+![MeDEStrandBEDPE](https://user-images.githubusercontent.com/98410560/163442593-0d60e05f-b5a9-4fd4-bb97-c3cfe46d629a.png)
 
 ## Workflow execution
 
