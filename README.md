@@ -11,8 +11,7 @@
 
 ## Workflow overview
 
-
-
+[MeDEStrandBEDPE.pdf](https://github.com/mhanbioinfo/PLBR_MeDEStrandBEDPE/files/8491085/MeDEStrandBEDPE.pdf)
 
 ## Workflow execution
 
@@ -68,3 +67,11 @@ chr1    10035   10105   chr1    10174   10230   NB551056:129:H7...   0       0  
 chr1    10175   10245   chr1    10257   10328   NB551056:129:H7...   9       9       +       -       70M     28M1D42M    99      147     153    -153    5       4
 ...
 ```
+
+## BEDPE rationale
+
+- .bam large size prohibitive for storing in PLBR database
+- .bedpe.gz retains essential .bam information while having 6x size reduction
+- bedtools bam2bedpe conversion cannot handle secondary alignments,
+  - bam2bedpe module in this workflow preserves all alignments,
+  - able to do custom alignment filtering of .bedpe file and rerun MeDEStrand analysis in PLBR
