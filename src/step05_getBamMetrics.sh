@@ -15,7 +15,7 @@
 # getopts ###################################################
 usage(){
     echo 
-    echo "Usage: bash step5_getBamMetrics.sh -s SAMPLE_NAME -i INPUT_DIR -b INPUT_BAM -r REFERENCE_FASTA -o OUT_DIR" 
+    echo "Usage: bash step5_getBamMetrics.sh -s SAMPLE_NAME -i INPUT_DIR -b INPUT_BAM -r REFERENCE_FASTA -o OUT_DIR -p PICARD_DIR" 
     echo 
 }
 no_args="true"
@@ -27,7 +27,7 @@ Help()
     echo 
     echo "Calling Picard CollectMultipleMetrics and CollectGcBiasMetrics QC metrics."
     echo
-    echo "Usage: bash step5_getBamMetrics.sh -s SAMPLE_NAME -i INPUT_DIR -b INPUT_BAM -r REFERENCE_FASTA -o OUT_DIR"
+    echo "Usage: bash step5_getBamMetrics.sh -s SAMPLE_NAME -i INPUT_DIR -b INPUT_BAM -r REFERENCE_FASTA -o OUT_DIR -p PICARD_DIR"
     echo "options:"
     echo "-h   [HELP]      print help"
     echo "-s   [REQUIRED]  short and unique sample name without file extensions"
@@ -35,11 +35,12 @@ Help()
     echo "-b   [REQUIRED]  input bam (full path)"
     echo "-r   [REQUIRED]  reference fasta file (full path)"
     echo "-o   [REQUIRED]  output directory (full path)"
+    echo "-p   [REQUIRED]  full path to directory containing picard.jar"
     echo
 }
 
 ## Get the options
-while getopts ":hs:i:b:r:o:" option; do
+while getopts ":hs:i:b:r:o:p:" option; do
     case "${option}" in
         h) Help
            exit;;
@@ -48,6 +49,7 @@ while getopts ":hs:i:b:r:o:" option; do
         b) INPUT_BAM=${OPTARG};;
         r) REF_FASTA_F=${OPTARG};;
         o) OUT_DIR=${OPTARG};;
+        p) PICARD_DIR=${OPTARG};;
        \?) echo "Error: Invalid option"
            exit;;
     esac
@@ -67,13 +69,13 @@ source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
 
 ALIGNER="BWA"
 
-picard CollectMultipleMetrics \
+java -jar ${PICARD_DIR}/picard.jar CollectMultipleMetrics \
     R=${REF_FASTA_F} \
     I=${INPUT_DIR}/${INPUT_BAM} \
     O="${OUT_DIR}/${SAMPLE_NAME}.${ALIGNER}" \
     VALIDATION_STRINGENCY=SILENT
 
-picard CollectGcBiasMetrics \
+java -jar ${PICARD_DIR}/picard.jar CollectGcBiasMetrics \
     R=${REF_FASTA_F} \
     I=${INPUT_DIR}/${INPUT_BAM} \
     O="${OUT_DIR}/${SAMPLE_NAME}.${ALIGNER}.gc_bias_metrics.txt" \

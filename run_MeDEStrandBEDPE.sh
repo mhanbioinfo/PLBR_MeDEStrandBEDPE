@@ -77,8 +77,8 @@ if [ $INPUT_FILE_TYPE_FASTQ_GZ = "Yes" ]; then
         -k ${BAM2BEDPE_NUM_OF_CHUNKS} \
         -c ${BEDPE2LEANBEDPE_CHR_SELECT_F} \
         -x ${SRC_DIR} \
-        -t ${KEEP_TMP}
-
+        -t ${KEEP_TMP} \
+        -y ${PICARD_DIR}
 elif [ $INPUT_FILE_TYPE_BAM = "Yes" ]; then
     echo ""
     echo "Input filetype is BAM"
@@ -91,8 +91,8 @@ elif [ $INPUT_FILE_TYPE_BAM = "Yes" ]; then
         -k ${BAM2BEDPE_NUM_OF_CHUNKS} \
         -c ${BEDPE2LEANBEDPE_CHR_SELECT_F} \
         -x ${SRC_DIR} \
-        -t ${KEEP_TMP}
-
+        -t ${KEEP_TMP} \
+        -y ${PICARD_DIR}
 elif [ $INPUT_FILE_TYPE_BEDPE_GZ = "Yes" ]; then
     echo ""
     echo "Input filetype is .bedpe.gz"

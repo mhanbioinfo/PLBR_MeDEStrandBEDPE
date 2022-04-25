@@ -9,6 +9,7 @@ INPUT_FILE_TYPE:
   BEDPE_GZ: "No"
 SLURM_OR_LOCAL: "local"
 KEEP_TMP: "true"
+PICARD_DIR: "/cluster/tools/software/picard/2.10.9"
 
 # references
 REF_BWA: "/absolute/path/to/BWA_index/hg38_F19K16_F24B22"

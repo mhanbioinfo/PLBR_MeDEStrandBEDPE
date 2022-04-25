@@ -15,7 +15,7 @@
 # getopts ###################################################
 usage(){
     echo 
-    echo "Usage: bash step3_filterBadAlignments.sh -s SAMPLE_NAME -i INPUT_DIR -b UNFILT_BAM -o OUT_DIR -p PICARD_DIR" 
+    echo "Usage: bash step3_filterBadAlignments.sh -s SAMPLE_NAME -i INPUT_DIR -b UNFILT_BAM -o OUT_DIR" 
     echo 
 }
 no_args="true"
@@ -27,19 +27,18 @@ Help()
     echo 
     echo "Filtering out bad alignments (unmapped, secondary, insert size, edit distance)"
     echo
-    echo "Usage: bash step3_filterBadAlignments.sh -s SAMPLE_NAME -i INPUT_DIR -b UNFILT_BAM -o OUT_DIR -p PICARD_DIR"
+    echo "Usage: bash step3_filterBadAlignments.sh -s SAMPLE_NAME -i INPUT_DIR -b UNFILT_BAM -o OUT_DIR"
     echo "options:"
     echo "-h   [HELP]      print help"
     echo "-s   [REQUIRED]  short and unique sample name without file extensions"
     echo "-i   [REQUIRED]  input directory with bam (full path)"
     echo "-b   [REQUIRED]  unfiltered bam (full path)"
     echo "-o   [REQUIRED]  output directory (full path)"
-    echo "-p   [REQUIRED]  full path to directory containing  picard.jar"
     echo
 }
 
 ## Get the options
-while getopts ":hs:i:b:o:p:" option; do
+while getopts ":hs:i:b:o:" option; do
     case "${option}" in
         h) Help
            exit;;
@@ -47,7 +46,6 @@ while getopts ":hs:i:b:o:p:" option; do
         i) INPUT_DIR=${OPTARG};;
         b) BAM_F=${OPTARG};;
         o) OUT_DIR=${OPTARG};;
-        p) PICARD_DIR=${OPTARG};;
        \?) echo "Error: Invalid option"
            exit;;
     esac
@@ -64,7 +62,6 @@ echo "Job started at "$(date)
 time1=$(date +%s)
 
 #source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
-#module load picard
 
 BAM_FILT1="${SAMPLE_NAME}.filter1.bam"
 MPP="${BAM_FILT1%.*}.mapped_proper_pair.txt"
@@ -85,7 +82,7 @@ samtools view \
     | awk '{print $1}' \
     > ${OUT_DIR}/${MPP}
 
-java -jar $PICARD_DIR/picard.jar FilterSamReads \
+picard FilterSamReads \
     I=${OUT_DIR}/${BAM_FILT1} \
     O=${OUT_DIR}/${BAM_FILT2} \
     READ_LIST_FILE=${OUT_DIR}/${MPP} \
@@ -101,7 +98,7 @@ samtools view \
     | awk '{print $1}' \
     > ${OUT_DIR}/${HiMM} 
 
-java -jar $PICARD_DIR/picard.jar FilterSamReads \
+picard FilterSamReads \
     I=${OUT_DIR}/${BAM_FILT2} \
     O=${OUT_DIR}/${BAM_FILT3} \
     READ_LIST_FILe=${OUT_DIR}/${HiMM} \

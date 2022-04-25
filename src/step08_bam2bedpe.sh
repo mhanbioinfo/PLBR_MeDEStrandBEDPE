@@ -15,7 +15,7 @@
 # getopts ###################################################
 usage(){
     echo 
-    echo "Usage: bash/sbatch step8_bam2bedpe.sh -s [slurm|local] -c num_of_chunks -b bam_input_path -o output_dir -x SRC_DIR -t"
+    echo "Usage: bash/sbatch step8_bam2bedpe.sh -s [slurm|local] -c num_of_chunks -b bam_input_path -o output_dir -x SRC_DIR -p PICARD_DIR -t"
     echo 
 }
 no_args="true"
@@ -36,12 +36,13 @@ Help()
     echo "-b   [REQUIRED]  path to bam input (full path)"
     echo "-o   [REQUIRED]  output directory (full path)"
     echo "-x   [REQUIRED]  src directory with pipeline scripts (full path)"
+    echo "-p   [REQUIRED]  full path to directory containing picard.jar"
     echo "-t   [OPTIONAL]  keep tmp_dir"
     echo
 }
 
 ## Get the options
-while getopts ":hs:c:b:o:x:t" option; do
+while getopts ":hs:c:b:o:x:p:t" option; do
     case "${option}" in
         h) Help
            exit;;
@@ -50,6 +51,7 @@ while getopts ":hs:c:b:o:x:t" option; do
         b) INPUT_BAM_PATH=${OPTARG};;
         o) OUT_DIR=${OPTARG};;
         x) SRC_DIR=${OPTARG};;
+        p) PICARD_DIR=${OPTARG};;
         t) KEEP_TMP=true;;
        \?) echo "Error: Invalid option"
            exit;;
@@ -142,11 +144,12 @@ for CHUNK in ${TMP_DIR}/${OUT_FRAG_NAMES}.CHUNK*; do
 	#SBATCH -e ./%j-%x.err
 	
 	source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
-
+	PICARD_DIR=${PICARD_DIR}
+	
 	echo "Job started at "\$(date) 
 	time1=\$(date +%s)
 	
-	picard FilterSamReads \
+	java -jar ${PICARD_DIR}/picard.jar FilterSamReads \
 	    I=${INPUT_DIR}/${INPUT_BAM} \
 	    O=${TMP_DIR}/"${INPUT_BAM%.*}_${CHUNK##*.}.bam" \
 	    READ_LIST_FILE=${CHUNK} \

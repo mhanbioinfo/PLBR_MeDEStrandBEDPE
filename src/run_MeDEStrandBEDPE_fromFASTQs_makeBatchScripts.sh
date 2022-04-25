@@ -17,7 +17,7 @@
 
 usage(){
     echo 
-    echo "Usage: bash run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -u UMI1_PATTERN -v UMI2_PATTERN -r REF_BWA -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP" 
+    echo "Usage: bash run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -u UMI1_PATTERN -v UMI2_PATTERN -r REF_BWA -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP -y PICARD_DIR" 
     echo 
 }
 no_args="true"
@@ -29,7 +29,7 @@ Help()
     echo 
     echo "Write out batch script for each sample and run MeDEStrandBEDPE with FASTQs as input."
     echo
-    echo "Usage: bash run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -u UMI1_PATTERN -v UMI2_PATTERN -r REF_BWA -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP"
+    echo "Usage: bash run_MeDEStrandBEDPE_fromFASTQs_makeBatchScripts.sh -s SAMPLESHEET_PATH -p PROJ_DIR -u UMI1_PATTERN -v UMI2_PATTERN -r REF_BWA -f REF_FASTA_F -w WINDOW_SIZE -l SLURM_OR_LOCAL -k BAM2BEDPE_CHUNKS -c CHR_SELECT_F -x SRC_DIR -t KEEP_TMP -p PICARD_DIR"
     echo "options:"
     echo "-h   [HELP]      print help"
     echo "-s   [REQUIRED]  samplesheet.csv (full path)"
@@ -44,11 +44,12 @@ Help()
     echo "-c   [REQUIRED]  file for selecting which chromosomes to process (full path)"
     echo "-x   [REQUIRED]  src directory with pipeline scripts (full path)"
     echo "-t   [REQUIRED]  keep tmp_dir (true or false)"
+    echo "-y   [REQUIRED]  full path to directory containing picard.jar"
     echo
 }
 
 ## Get the options
-while getopts ":hs:p:u:v:r:f:w:l:k:c:x:t:" option; do
+while getopts ":hs:p:u:v:r:f:w:l:k:c:x:t:y:" option; do
     case "${option}" in
         h) Help
            exit;;
@@ -64,6 +65,7 @@ while getopts ":hs:p:u:v:r:f:w:l:k:c:x:t:" option; do
         c) CHR_SELECT_F=${OPTARG};;
         x) SRC_DIR=${OPTARG};;
         t) KEEP_TMP=${OPTARG};;
+        y) PICARD_DIR=${OPTARG};;
        \?) echo "Error: Invalid option"
            exit;;
     esac
@@ -145,6 +147,7 @@ while read -r SAMPLE_NAME_R1 PATH_R1; do
 	echo "Processing MeDEStrandBEDPE for ${SAMPLE_NAME_R1}"
 	
 	source /cluster/home/t110409uhn/bin/miniconda3/bin/activate wf_cfmedip_manual
+	PICARD_DIR=${PICARD_DIR}
 	
 	SAMPLE_NAME="${SAMPLE_NAME_R1//-/_}"
 	INPUT_DIR="${R1_FASTQ_DIR}"
@@ -186,13 +189,13 @@ while read -r SAMPLE_NAME_R1 PATH_R1; do
 	bash \${SRC_DIR}/step02_alignReads.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -f \${R1_EXTRACTED_F} -g \${R2_EXTRACTED_F} -r \${REF_BWA} -o \${TMP_SAMPLE_DIR}
 	
 	## filter out bad alignments
-	bash \${SRC_DIR}/step03_filterBadAlignments.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -b \${BAM_F} -o \${TMP_SAMPLE_DIR}
+	bash \${SRC_DIR}/step03_filterBadAlignments.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -b \${BAM_F} -o \${TMP_SAMPLE_DIR} -p \${PICARD_DIR}
 	
 	## Remove duplicates based on UMI extracted with UMI-tools
 	bash \${SRC_DIR}/step04_removeDuplicates.sh -s \${SAMPLE_NAME} -i \${TMP_SAMPLE_DIR} -b \${BAM_FILT3} -o \${BAM_OUT_DIR}
 	
 	## Calling Picard CollectMultipleMetrics and CollectGcBiasMetrics get QC metrics
-	bash \${SRC_DIR}/step05_getBamMetrics.sh -s \${SAMPLE_NAME} -i \${BAM_OUT_DIR} -b \${UMI_DEDUP} -r \${REF_FASTA_F} -o \${QC_METRICS_DIR}
+	bash \${SRC_DIR}/step05_getBamMetrics.sh -s \${SAMPLE_NAME} -i \${BAM_OUT_DIR} -b \${UMI_DEDUP} -r \${REF_FASTA_F} -o \${QC_METRICS_DIR} -p \${PICARD_DIR}
 	
 	## Parse methylation control QC metrics from UMI deduplicated bam file
 	bash \${SRC_DIR}/step06_parseMethControl.sh -s \${SAMPLE_NAME} -i \${BAM_OUT_DIR} -b \${UMI_DEDUP} -o \${QC_METRICS_DIR}
@@ -201,7 +204,7 @@ while read -r SAMPLE_NAME_R1 PATH_R1; do
 	bash \${SRC_DIR}/step07_getFilterMetrics.sh -s \${SAMPLE_NAME} -i \${BAM_OUT_DIR} -t \${TMP_SAMPLE_DIR} -o \${QC_METRICS_DIR}
 	
 	## Processes bam to bedpe in chunks, preserving FLAG and TLEN info
-	bash \${SRC_DIR}/step08_bam2bedpe.sh -s \${SLURM_OR_LOCAL} -c \${NUM_OF_CHUNKS} -b \${BAM_OUT_DIR}/\${UMI_DEDUP} -o \${BEDPE_OUT_DIR} -x \${SRC_DIR}
+	bash \${SRC_DIR}/step08_bam2bedpe.sh -s \${SLURM_OR_LOCAL} -c \${NUM_OF_CHUNKS} -b \${BAM_OUT_DIR}/\${UMI_DEDUP} -o \${BEDPE_OUT_DIR} -x \${SRC_DIR} -p \${PICARD_DIR}
 	
 	## Process .bedpe into a lean .bedpe for input into MeDEStrandBEDPE R package
 	bash \${SRC_DIR}/step09_bedpe2leanbedpe_for_MeDEStrand.sh -i \${BEDPE_OUT_DIR} -b \${BEDPE_GZ_FNAME} -c \${CHR_SELECT_F} -o \${LEANBEDPE_OUT_DIR} -t
