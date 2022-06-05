@@ -4,10 +4,10 @@
 #SBATCH --mail-user=ming.han@uhn.ca
 #SBATCH -t 5-00:00:00
 #SBATCH -D ./
-#SBATCH --mem=60G
+#SBATCH --mem=1G
 #SBATCH -J run_MeDEStrandBEDPE
-#SBATCH -p himem
-#SBATCH -c 4
+#SBATCH -p all
+#SBATCH -c 1
 #SBATCH -N 1
 #SBATCH -o ./%j-%x.out
 #SBATCH -e ./%j-%x.err

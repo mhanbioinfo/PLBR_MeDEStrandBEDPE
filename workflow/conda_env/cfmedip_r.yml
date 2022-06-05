@@ -1,0 +1,13 @@
+name: cfmedip_r
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - readline=8.0
+  - r-devtools=2.4.3
+  - r-docopt=0.7.1
+  - r-tidyverse=1.3.1
+  - bioconductor-bsgenome=1.58.0
+  - bioconductor-genomicranges=1.42.0
+  - bioconductor-medips=1.42.0
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38=1.4.3

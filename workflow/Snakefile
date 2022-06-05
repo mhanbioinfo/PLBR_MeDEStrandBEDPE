@@ -1,0 +1,80 @@
+import pandas as pd
+
+#configfile: "config.yml"
+
+path_to_data = config['data']['base_path']
+input_ftype = config['pipeline_params']['input_ftype']
+
+#######################
+## loading rule modules
+include: "rules/update_conda_env.smk"            ## instructions for installing dependencies to conda env
+include: "rules/common.smk"                      ## self-defined functions
+
+if input_ftype == "fastq":
+    include: "rules/process_fastq.smk"           ## consensusCruncher & trim-galore
+    include: "rules/bwa_align_sort_merge_filt_umi_dedup.smk"
+    include: "rules/qc.smk"                      ## fastQC on fastq and bam
+    include: "rules/bam_filter_metrics.smk"            ## read counts at each bam filtering stage
+elif input_ftype == "bam":
+    include: "rules/process_bam.smk"             ## if input_ftype == bam, softlink bam to proper directory and index bam
+    include: "rules/qc.smk"                      ## fastQC on fastq and bam
+elif input_ftype == "bedpe":
+    include: "rules/process_bedpe.smk"           ## if input_ftype == bedpe, softlink bedpe to proper directory
+
+include: "rules/bam2bedpe4medestrand.smk"        ## convert bam to bedpe and bedpe4medremix as input to MedRemixBEDPE
+include: "rules/cfmedip_medestrand.smk"          ## run MedRemixBEDPE nbglm methylation algorithm, bam or bedpe
+
+
+
+# ------------------------------ #
+#  rule all (i.e. outputs)       #
+# ------------------------------ #
+
+use_bam_or_bedpe = list()
+bam_or_bedpe = config['pipeline_params']['bam_or_bedpe']
+if bam_or_bedpe == 'bam':
+    use_bam_or_bedpe.append(
+        expand(
+            [path_to_data + '/{cohort}/results/bam_cfmedip_medestrand/bam_{sample}_medestrand.bedgraph'.format(
+                cohort=v[0],
+                sample=v[1]) for v in get_all_samples_with_cohorts()])
+    )
+elif bam_or_bedpe == 'bedpe':
+    use_bam_or_bedpe.append(
+        expand(
+            [path_to_data + '/{cohort}/results/bedpe_cfmedip_medestrand/bedpe_{sample}_medestrand.bedgraph'.format(
+                cohort=v[0],
+                sample=v[1]) for v in get_all_samples_with_cohorts()])
+    )
+
+output_qc_or_not = list()
+if input_ftype == 'fastq':
+    output_qc_or_not.append(
+        expand(
+            [path_to_data + '/{cohort}/qc/{sample}_qc_full.txt'.format(
+                cohort=v[0],
+                sample=v[1]) for v in get_all_samples_with_cohorts()])
+    )
+    output_qc_or_not.append(
+        expand(
+            [path_to_data + '/{cohort}/qc/bam_filt_metrics/{sample}.bam_filt_metrics.txt'.format(
+                cohort=v[0],
+                sample=v[1]) for v in get_all_samples_with_cohorts()])
+    )
+elif input_ftype == 'bam':
+    output_qc_or_not.append(
+        expand(
+            [path_to_data + '/{cohort}/qc/{sample}_qc_full.txt'.format(
+                cohort=v[0],
+                sample=v[1]) for v in get_all_samples_with_cohorts()])
+    )
+
+
+rule all:
+    input:
+        use_bam_or_bedpe = use_bam_or_bedpe,
+        output_qc_or_not = output_qc_or_not
+
+
+
+## EOF
