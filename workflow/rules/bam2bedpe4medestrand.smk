@@ -34,7 +34,7 @@ rule get_clean_bedpe4medestrand:
         out_dir = path_to_data + '/{cohort}/results/bedpelean_out'
     resources: cpus=4, mem_mb=32000, time_min='1-00:00:00'
     shell:
-        'bash src/bam2bedpe_scripts/bedpe2leanbedpe_for_MeDEStrand.sh -i {input} -o {params.out_dir} -m {output} -t'
+        'bash src/bam2bedpe_scripts/bedpe2leanbedpe_for_MeDEStrand.sh -i {input} -o {params.out_dir} -m {output}'
 
 
 

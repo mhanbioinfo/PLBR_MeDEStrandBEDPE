@@ -102,6 +102,18 @@ rule CollectGcBiasMetrics:
     shell:
         'picard CollectGcBiasMetrics -I {input} -O {output.metric} -CHART {output.chart} -S {output.summary} -R {params.fasta} && bash src/QC/parse_picard_QC.sh picard.CollectGcBiasMetrics {output.summary} {output.summary}.parsed'
 
+## CollectInsertSizeMetrics
+rule CollectInsertSizeMetrics:
+    input:
+        path_to_data + '/{cohort}/results/bam_dedupd/{sample}.aligned.sorted.filt3.dedupd_hg38only.bam',
+    output:
+        metric = path_to_data + '/{cohort}/qc/picard_qc/{sample}.picardInsertSize_metrics.txt',
+        histo = path_to_data + '/{cohort}/qc/picard_qc/{sample}.picardInsertSize_metrics.pdf',
+    resources: cpus=1, mem_mb=16000, time_min='5:00:00'
+    conda: '../conda_env/samtools.yml'
+    shell:
+        'picard CollectInsertSizeMetrics -INCLUDE_DUPLICATES true -I {input} -O {output.metric} -H {output.histo} -M 0 -W 600 && bash src/QC/parse_picard_QC.sh picard.CollectInsertSizeMetrics {output.metric} {output.metric}.parsed'
+
 ## MarkDuplicates
 rule MarkDuplicates_QC:
     input:
@@ -180,6 +192,7 @@ rule QC_out:
         picard_gcbias_metric = path_to_data + '/{cohort}/qc/picard_qc/{sample}.gc_bias_metrics.txt',
         picard_gcbias_chart = path_to_data + '/{cohort}/qc/picard_qc/{sample}.gc_bias_metrics.pdf',
         picard_gcbias_summary = path_to_data + '/{cohort}/qc/picard_qc/{sample}.gc_bias_summary_metrics.txt',
+        picard_insertsize_metric = path_to_data + '/{cohort}/qc/picard_qc/{sample}.picardInsertSize_metrics.txt',
         picard_dedupd_metric = path_to_data + '/{cohort}/qc/picard_qc/{sample}.marked_dup_metrics.txt',
         picard_alignment_metric = path_to_data + '/{cohort}/qc/picard_qc/{sample}.alignmentMetrics.txt',
         picard_quality_metric = path_to_data + '/{cohort}/qc/picard_qc/{sample}.quality_yield_metrics.txt',
@@ -193,5 +206,5 @@ rule QC_out:
     resources: cpus=1, mem_mb=1000, time_min='00:01:00'
     conda: '../conda_env/samtools.yml'
     shell:
-        'cat {input.medips_qc} {input.F19K16_F24B22_methyl_summary}.parsed {input.picard_gcbias_summary}.parsed {input.picard_dedupd_metric}.parsed {input.picard_alignment_metric}.parsed {input.picard_quality_metric}.parsed > {output.full_qc} && rm {input.F19K16_F24B22_methyl_summary}.parsed {input.picard_gcbias_summary}.parsed {input.picard_dedupd_metric}.parsed {input.picard_alignment_metric}.parsed {input.picard_quality_metric}.parsed'
+        'cat {input.medips_qc} {input.F19K16_F24B22_methyl_summary}.parsed {input.picard_gcbias_summary}.parsed {input.picard_insertsize_metric}.parsed {input.picard_dedupd_metric}.parsed {input.picard_alignment_metric}.parsed {input.picard_quality_metric}.parsed > {output.full_qc} && rm {input.F19K16_F24B22_methyl_summary}.parsed {input.picard_gcbias_summary}.parsed {input.picard_insertsize_metric}.parsed {input.picard_dedupd_metric}.parsed {input.picard_alignment_metric}.parsed {input.picard_quality_metric}.parsed'
 
