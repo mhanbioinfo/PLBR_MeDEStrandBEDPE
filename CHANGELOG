@@ -2,7 +2,7 @@
 - Converted to Snakemake pipeline
 - Conda env installation instructions written to wiki
 - FastQC, Picard QC, MEDIPS QC, methylation QC fully implemented
-- Cleaned up source code, rules files and config files
+- Cleaned up source code, rules files, config files
 
 2022-04-14 PLBR_MeDEStrandBEDPE (version 0.1.0)
 - Pipeline accepts fastq, bam and bedpe input
